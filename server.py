@@ -4,16 +4,25 @@ from feature_extractor import FeatureExtractor
 from datetime import datetime
 from flask import Flask, request, render_template
 from pathlib import Path
+from glob import glob
+import os, sys
 
 app = Flask(__name__)
 
 # Read image features
-fe = FeatureExtractor()
+model_name = sys.argv[1]
+fe = FeatureExtractor(model_name)
 features = []
 img_paths = []
-for feature_path in Path("./static/feature").glob("*.npy"):
+
+#for feature_path in Path("./static/feature").glob("*.npy"):
+for feature_path in sorted(glob("./static/img/**/*_{}.npy".format(model_name), recursive=True)):
     features.append(np.load(feature_path))
-    img_paths.append(Path("./static/img") / (feature_path.stem + ".jpg"))
+    #img_paths.append(Path("./static/img") / (feature_path.stem + ".jpg"))
+    fp_no_ext = os.path.splitext(feature_path)[0]
+    fp_no_ext = fp_no_ext[:len(fp_no_ext) - len(model_name) - 1]
+    img_paths.append("{}.jpg".format(fp_no_ext))
+print("loaded {} indexed images".format(len(img_paths)))
 features = np.array(features)
 
 
